@@ -1,0 +1,89 @@
+x-common-environment: &common-environment
+  PYTHONPATH: /app/src
+  DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/recomply_ai
+  REDIS_URL: redis://redis:6379/2
+  JWT_SECRET_KEY: system-jwt-secret
+  ADMIN_USERNAME: admin
+  ADMIN_PASSWORD: secret123
+  CLIENT_API_KEY: api-key
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: recomply_ai
+    volumes:
+      - ./.data/postgres:/var/lib/postgresql/data
+    # Add shared memory size (for PostgreSQL performance)
+    shm_size: 256mb
+    # Add tmpfs for temporary files
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d recomply_ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - ./.data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrations:
+    image: ghcr.io/bitorix/recomply-ai-backend:latest
+    command: sh -c "uv run alembic upgrade head"
+    environment:
+      <<: *common-environment
+    env_file:
+      - ${ENV_FILE:-.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: ghcr.io/bitorix/recomply-ai-backend:latest
+    command: uv run python -m scripts.run_api_server
+    ports:
+      - "8000:8000"
+    environment:
+      <<: *common-environment
+    env_file:
+      - ${ENV_FILE:-.env}
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+
+  worker:
+    image: ghcr.io/bitorix/recomply-ai-backend:latest
+    command: uv run python -m scripts.run_arq_worker
+    environment:
+      <<: *common-environment
+    env_file:
+      - ${ENV_FILE:-.env}
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+
+  frontend:
+    image: ghcr.io/bitorix/recomply-ai-frontend:latest
+    ports:
+      - "3000:80"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    depends_on:
+      api:
+        condition: service_started
+
