@@ -7,11 +7,10 @@ This document outlines the deployment and operation of the recomply.ai complianc
 ### Prerequisites
 - Docker and Docker Compose installed on your system
 - Network access to Google Cloud's container registry (us-central1-docker.pkg.dev)
-- The `pull-key.json` file provided by recomply.ai team. This file contains a GCP service account key required to
-  pull our private container images. This key ensures secure access to the latest verified builds of our software.
-- GCP account for AI API access.
+- The `pull-key.json` file provided by recomply.ai team (necessary for pulling our private docker images)
+- GCP account for AI API access
 
-## Setting up the GCP credentials
+## Setting up the GCP credentials for AI API access
 
 The recomply.ai system uses Google Cloud's Vertex AI to power its compliance screening and classification features. You'll need to set up a Google Cloud service account with appropriate permissions to access these AI services.
 
@@ -85,12 +84,18 @@ GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64=<your-base64-encoded-key-here>
 recomply.ai stores their system docker images in Google Cloud's Artifact Registry. To pull these images, you need to first
 authenticate with Google Cloud Artifact Registry.
 
-1. **Authenticate with Google Cloud Artifact Registry**:
+1. **Ensure the pull-key.json is copied**
+   - The `pull-key.json` file is provided by recomply.ai team. It contains a GCP key required to
+     pull our private docker container images. This key ensures secure access to the latest verified
+     builds of our software.
+   - Copy the `pull-key.json` file to the root directory of the project.
+
+2. **Authenticate with Google Cloud Artifact Registry**:
    ```bash
    cat pull-key.json | docker login -u _json_key --password-stdin https://us-central1-docker.pkg.dev
    ```
 
-2. **Start the entire platform**:
+3. **Start the entire platform**:
    ```bash
    docker compose up -d --pull always
    ```
