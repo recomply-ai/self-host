@@ -123,9 +123,9 @@ Once the service is running (see the previous step):
 
 ## Data Persistence
 
-Application data is persisted in local directories:
-- PostgreSQL data: `./.data/postgres/`
-- Redis data: `./.data/redis/`
+Application data is persisted under `.data/` directory:
+- PostgreSQL data: `.data/postgres/`
+- Redis data: `.data/redis/`
 
 These directories will be created automatically and contain all your compliance data and system state.
 
