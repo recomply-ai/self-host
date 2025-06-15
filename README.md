@@ -128,21 +128,3 @@ Application data is persisted under `.data/` directory:
 - Redis data: `.data/redis/`
 
 These directories will be created automatically and contain all your compliance data and system state.
-
-## System Architecture (if you're curious)
-
-The recomply.ai platform consists of six key components orchestrated through Docker Compose:
-
-### Core Services
-
-- **Frontend** - Web interface serving the user dashboard and compliance management tools
-- **API** - Backend REST API service handling all business logic and client requests  
-- **Worker** - Asynchronous task execution process for background operations
-- **Migrations** - Database schema management service ensuring data structure consistency
-
-### Infrastructure Services
-
-- **PostgreSQL** - Primary database for application data persistence and compliance records
-- **Redis** - In-memory data store used for asynchronous task coordination via ARQ (Async Redis Queue)
-
-All application images are automatically built and published from our code repositories after passing comprehensive tests and security checks. 
