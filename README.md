@@ -120,11 +120,3 @@ Once the service is running (see the previous step):
    POST /api/v1/screening-cases (POST http://localhost:8000/api/v1/screening-cases) endpoint.
    For more information about the endpoint, please see
    http://localhost:8000/redoc#tag/Screening-Cases/operation/create_screening_case_api_v1_screening_cases_post
-
-## Data Persistence
-
-Application data is persisted under `.data/` directory:
-- PostgreSQL data: `.data/postgres/`
-- Redis data: `.data/redis/`
-
-These directories will be created automatically and contain all your compliance data and system state.
