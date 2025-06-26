@@ -97,7 +97,11 @@ authenticate with Google Cloud Artifact Registry.
 
 3. **Start the entire platform**:
    ```bash
-   docker compose up -d --pull always
+   docker compose up --pull always
+   ```
+   (Optionally in background mode if that's preferred)
+   ```bash
+   docker compose up --pull always -d
    ```
 
 The system will automatically:
@@ -105,7 +109,7 @@ The system will automatically:
 - Initialize the database with the latest schema
 - Start all services in the correct dependency order
 - Make the frontend available at http://localhost:3000
-- Make the API available at http://localhost:8000
+- Make the API available at http://localhost:3000/api
 
 ## Using the system
 
@@ -115,8 +119,8 @@ Once the service is running (see the previous step):
 2) Use the following credentials on the login page:
    - **Username**: `admin`
    - **Password**: `secret123`
-3) You may view the API docs at http://localhost:8000/redoc (make sure the system is running before accessing the docs)
+3) You may view the API docs at http://localhost:3000/api/redoc (make sure the system is running before accessing the docs)
 4) You will need to configure your system to feed your sanction alerts to our system via the
-   POST /api/v1/screening-cases (POST http://localhost:8000/api/v1/screening-cases) endpoint.
+   POST /api/v1/screening-cases (POST http://localhost:3000/api/v1/screening-cases) endpoint.
    For more information about the endpoint, please see
-   http://localhost:8000/redoc#tag/Screening-Cases/operation/create_screening_case_api_v1_screening_cases_post
+   http://localhost:3000/api/redoc#tag/Screening-Cases/operation/create_screening_case_api_v1_screening_cases_post

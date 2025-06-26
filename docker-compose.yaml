@@ -19,9 +19,7 @@ services:
       POSTGRES_DB: recomply_ai
     volumes:
       - ./.data/postgres:/var/lib/postgresql/data
-    # Add shared memory size (for PostgreSQL performance)
     shm_size: 256mb
-    # Add tmpfs for temporary files
     tmpfs:
       - /tmp
       - /var/run/postgresql
@@ -54,8 +52,6 @@ services:
   api:
     image: us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:latest
     command: uv run python -m scripts.run_api_server
-    ports:
-      - "8000:8000"
     environment:
       <<: *common-environment
     env_file: *common-env-file
@@ -64,6 +60,11 @@ services:
         condition: service_healthy
       migrations:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://0.0.0.0:8000/', timeout=5)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   worker:
     image: us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:latest
@@ -79,10 +80,33 @@ services:
 
   frontend:
     image: us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:latest
-    ports:
-      - "3000:80"
-    environment:
-      VITE_API_BASE_URL: http://localhost:8000
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    command: /bin/sh -c "envsubst '$$BACKEND_URL $$FRONTEND_URL' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+    ports:
+      - "3000:80"
+    volumes:
+      - ./nginx/nginx.conf.template:/etc/nginx/templates/nginx.conf.template:ro
+      - ./.data/logs:/var/log/nginx
+    environment:
+      - BACKEND_URL=api:8000
+      - FRONTEND_URL=frontend:80
+    depends_on:
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
