@@ -1,3 +1,6 @@
+x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:503d31917f3534fda2c40ebf00b277fe3d37aafc
+x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:96be0f90c0710031532c5ba6270d07f142ccb30d
+
 x-common-environment: &common-environment
   PYTHONPATH: /app/src
   DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/recomply_ai
@@ -40,7 +43,7 @@ services:
       retries: 5
 
   migrations:
-    image: us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:latest
+    image: *backend-image
     command: sh -c "uv run alembic upgrade head"
     environment:
       <<: *common-environment
@@ -50,7 +53,7 @@ services:
         condition: service_healthy
 
   api:
-    image: us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:latest
+    image: *backend-image
     command: uv run python -m scripts.run_api_server
     environment:
       <<: *common-environment
@@ -67,7 +70,7 @@ services:
       retries: 5
 
   worker:
-    image: us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:latest
+    image: *backend-image
     command: uv run python -m scripts.run_arq_worker
     environment:
       <<: *common-environment
@@ -79,7 +82,7 @@ services:
         condition: service_completed_successfully
 
   frontend:
-    image: us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:latest
+    image: *frontend-image
     depends_on:
       api:
         condition: service_healthy
