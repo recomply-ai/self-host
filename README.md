@@ -108,19 +108,31 @@ The system will automatically:
 - Pull the latest verified images from our repositories
 - Initialize the database with the latest schema
 - Start all services in the correct dependency order
-- Make the frontend available at http://localhost:3000
-- Make the API available at http://localhost:3000/api
+- Make the entire system available at http://localhost (both frontend and API)
 
 ## Using the system
 
 Once the service is running (see the previous step):
 
-1) Go to http://localhost:3000
+1) Go to http://localhost
 2) Use the following credentials on the login page:
    - **Username**: `admin`
    - **Password**: `secret123`
-3) You may view the API docs at http://localhost:3000/api/redoc (make sure the system is running before accessing the docs)
+3) You may view the API docs at http://localhost/api/redoc (make sure the system is running before accessing the docs)
 4) You will need to configure your system to feed your sanction alerts to our system via the
-   POST /api/v1/screening-cases (POST http://localhost:3000/api/v1/screening-cases) endpoint.
+   POST /api/v1/screening-cases (POST http://localhost/api/v1/screening-cases) endpoint.
    For more information about the endpoint, please see
-   http://localhost:3000/api/redoc#tag/Screening-Cases/operation/create_screening_case_api_v1_screening_cases_post
+   http://localhost/api/redoc#tag/Screening-Cases/operation/create_screening_case_api_v1_screening_cases_post
+
+## Custom Domain
+
+To use a custom domain to access the system, let's assume you are running the system on a server with IP `a.b.c.d`,
+then you need to create a DNS A record that maps your chosen hostname (e.g., `custom.domain.name`) to `a.b.c.d`.
+This will allow you to access the system at `http://custom.domain.name`.
+
+## Important Considerations
+
+Please do not modify `docker-compose.yaml` - this may introduce unexpected behaviour, and will make it harder for you
+to consume system updates due to potential merge conflicts. Any configuration on your end should be done via
+the `.env` file, custom domain mappings or reverse proxy configurations. If you want certain parts of the
+system to be configurable, please speak to the recomply.ai team.
