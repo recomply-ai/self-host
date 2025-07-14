@@ -71,12 +71,25 @@ base64 -i gcp-vertex-key.json
 
 Copy the entire base64 output (it will be a long string).
 
-#### Step 7: Update the .env file
+#### Step 7a: Update the .env file (for Docker Compose configuration)
 
 - In the root directory of the project, open the existing `.env` file and set `GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64`
   to the base64 string you copied in the previous step:
 ```env
 GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64=<your-base64-encoded-key-here>
+```
+
+#### Step 7b: Update the `docker-swarm.yaml` file (for Docker Swarm configuration)
+
+Docker Swarm does not allow injecting environment variables via `.env` files,
+so you need to update the `docker-swarm.yaml` file directly.
+
+- Under the `x-common-environment: &common-environment` section in the `docker-swarm.yaml` file,
+  update the `GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64` variable with the base64 string you copied:
+```yaml
+x-common-environment: &common-environment
+  ...
+  GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64=<your-base64-encoded-key-here>
 ```
 
 ## Running the system
@@ -95,14 +108,25 @@ authenticate with Google Cloud Artifact Registry.
    cat artifact-repository-key.json | docker login -u _json_key --password-stdin https://us-central1-docker.pkg.dev
    ```
 
-3. **Start the entire platform**:
-   ```bash
-   docker compose up --pull always
-   ```
-   (Optionally in background mode if that's preferred)
-   ```bash
-   docker compose up --pull always -d
-   ```
+3. **Start the platform**:
+
+For **Docker Compose**:
+```bash
+docker compose up --pull always
+```
+(Optionally in background mode if that's preferred)
+```bash
+docker compose up --pull always -d
+```
+
+For **Docker Swarm**:
+```bash
+docker stack deploy -c docker-swarm.yaml recomply
+```
+to stop, run:
+```bash
+docker stack rm recomply
+```
 
 The system will automatically:
 - Pull the latest verified images from our repositories
