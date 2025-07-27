@@ -138,15 +138,15 @@ The system will automatically:
 
 Once the service is running (see the previous step):
 
-1) Go to http://localhost
+1) Go to <BASE_URL> (where you are hosting the system e.g. http://localhost or http://custom.domain.name)
 2) Use the following credentials on the login page:
    - **Username**: `admin`
    - **Password**: `secret123`
-3) You may view the API docs at http://localhost/api/redoc (make sure the system is running before accessing the docs)
+3) You may view the API docs at <BASE_URL>/api/redoc (make sure the system is running before accessing the docs)
 4) You will need to configure your system to feed your sanction alerts to our system via the
-   POST /api/v1/screening-cases (POST http://localhost/api/v1/screening-cases) endpoint.
+   POST /api/v1/screening-cases (POST <BASE_URL>/api/v1/screening-cases) endpoint.
    For more information about the endpoint, please see
-   http://localhost/api/redoc#tag/Screening-Cases/operation/create_screening_case_api_v1_screening_cases_post
+   <BASE_URL>/api/redoc#tag/Screening-Cases-(v1)/operation/create_screening_case_api_v1_screening_cases_post
 
 ## Webhook Notifications
 
