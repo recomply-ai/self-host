@@ -1,9 +1,14 @@
 version: '3.8'
 
-x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:503d31917f3534fda2c40ebf00b277fe3d37aafc
+x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:da57ef9353ec97dce947af9cf5bf9d40d663ac35
 x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:96be0f90c0710031532c5ba6270d07f142ccb30d
 
 x-common-environment: &common-environment
+  GCP_PROJECT_ID: ignore
+  GCP_STORAGE_BUCKET_NAME: ignore
+  GCP_STORAGE_SERVICE_ACCOUNT_CREDS_BASE64: ignore
+  BROWSER_USE_BROWSER_BINARY_PATH: ignore
+  OPENSANCTIONS_API_KEY: ignore
   PYTHONPATH: /app/src
   DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/recomply_ai
   REDIS_URL: redis://redis:6379/2
