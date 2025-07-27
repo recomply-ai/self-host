@@ -148,6 +148,61 @@ Once the service is running (see the previous step):
    For more information about the endpoint, please see
    http://localhost/api/redoc#tag/Screening-Cases/operation/create_screening_case_api_v1_screening_cases_post
 
+## Webhook Notifications
+
+The recomply.ai system can send webhook notifications when screening cases are processed. This allows you to integrate with external systems and receive real-time updates about screening results.
+
+### Configuration
+
+Webhook notifications are configured via environment variables:
+
+#### For Docker Compose (.env file):
+```env
+# Optional: URL where webhook notifications will be sent
+NOTIFICATION_WEBHOOK_URL=http://your-webhook-endpoint.com/webhook
+
+# Optional: JSON object containing custom headers for webhook requests
+NOTIFICATION_WEBHOOK_HEADERS_JSON={"Authorization": "Bearer your-token", "X-Custom-Header": "value"}
+```
+
+#### For Docker Swarm (docker-swarm.yaml):
+```yaml
+x-common-environment: &common-environment
+  ...
+  # Optional: URL where webhook notifications will be sent
+  NOTIFICATION_WEBHOOK_URL: http://your-webhook-endpoint.com/webhook
+  
+  # Optional: JSON object containing custom headers for webhook requests
+  NOTIFICATION_WEBHOOK_HEADERS_JSON: '{"Authorization": "Bearer your-token", "X-Custom-Header": "value"}'
+```
+
+### Webhook Payload
+
+When a screening case is processed, the system will send a POST request to the configured webhook URL with a JSON payload. The payload schema is equivalent to the response from the `GET /api/v1/screening-cases/{id}` endpoint.
+
+For detailed information about the webhook payload structure, see the API documentation at:
+`<BASE_URL>/api/redoc#tag/Screening-Cases-(v1)/operation/get_screening_case_api_v1_screening_cases__case_id__get`
+
+### Example Configuration
+
+**Basic webhook setup:**
+```env
+NOTIFICATION_WEBHOOK_URL=https://your-integration.com/api/webhooks/recomply
+```
+
+**Webhook with authentication:**
+```env
+NOTIFICATION_WEBHOOK_URL=https://your-integration.com/api/webhooks/recomply
+NOTIFICATION_WEBHOOK_HEADERS_JSON={"Authorization": "Bearer your-api-token"}
+```
+
+### Notes
+
+- Both environment variables are optional. If `NOTIFICATION_WEBHOOK_URL` is not set, no webhook notifications will be sent.
+- The webhook request is sent asynchronously after the screening case processing is complete.
+- If the webhook request fails (e.g., network issues, invalid URL), the system will retry sending the webhook for a day with backoff. After a day of retrying, the system will stop retrying and log the error.
+- Ensure your webhook endpoint can handle POST requests with JSON payloads and responds with appropriate HTTP status code (2xx).
+
 ## Custom Domain
 
 To use a custom domain to access the system, let's assume you are running the system on a server with IP `a.b.c.d`,
