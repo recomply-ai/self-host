@@ -1,14 +1,9 @@
 version: '3.8'
 
-x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:da57ef9353ec97dce947af9cf5bf9d40d663ac35
-x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:96be0f90c0710031532c5ba6270d07f142ccb30d
+x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:9c358dfc3d8174c67fa3a95d55bb2315f33b62c1
+x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:b7d4c8013396f4f4175295f0973cb7e13290e2e0
 
 x-common-environment: &common-environment
-  GCP_PROJECT_ID: ignore
-  GCP_STORAGE_BUCKET_NAME: ignore
-  GCP_STORAGE_SERVICE_ACCOUNT_CREDS_BASE64: ignore
-  BROWSER_USE_BROWSER_BINARY_PATH: ignore
-  OPENSANCTIONS_API_KEY: ignore
   PYTHONPATH: /app/src
   DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/recomply_ai
   REDIS_URL: redis://redis:6379/2
@@ -16,7 +11,17 @@ x-common-environment: &common-environment
   ADMIN_USERNAME: admin
   ADMIN_PASSWORD: secret123
   CLIENT_API_KEY: api-key
+  BROWSER_USE_BROWSER_BINARY_PATH: /usr/bin/chromium
+  LOG_LEVEL: INFO
+  APP_ENV: dev
+
+  # Need to be populated manually
   GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64: POPULATE_ME_FROM_GOOGLE_SERVICE_ACCOUNT_KEY
+  OPENSANCTIONS_API_KEY: POPULATE_ME
+  GCP_PROJECT_ID: POPULATE_ME
+  GCP_STORAGE_BUCKET_NAME: POPULATE_ME
+  GCP_STORAGE_SERVICE_ACCOUNT_CREDS_BASE64: POPULATE_ME_FROM_GOOGLE_SERVICE_ACCOUNT_KEY
+  BRIGHT_DATA_CDP_WS_URL: POPULATE_ME
 
 services:
   postgres:

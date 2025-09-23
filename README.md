@@ -8,11 +8,14 @@ This document outlines the deployment and operation of the recomply.ai complianc
 - Docker and Docker Compose installed on your system
 - Network access to Google Cloud's container registry (us-central1-docker.pkg.dev)
 - The `artifact-repository-key.json` file provided by recomply.ai team (necessary for pulling our private docker images)
-- GCP account for AI API access
+- GCP account for AI API access and screenshot storage for the web scraping agent
 
-## Setting up the GCP credentials for AI API access
+## Setting up the GCP credentials for AI API access & storage
 
-The recomply.ai system uses Google Cloud's Vertex AI to power its compliance screening and classification features. You'll need to set up a Google Cloud service account with appropriate permissions to access these AI services.
+The recomply.ai system uses Google Cloud's Vertex AI to power its compliance screening and classification features. 
+In addition we use Google Cloud's Cloud Storage to store screenshots for the web scraping agent.
+You'll need to set up a Google Cloud service account with appropriate permissions to access these AI services and
+storage.
 
 #### Step 1: Create a Google Cloud Project (if you don't have one)
 
@@ -28,8 +31,9 @@ The recomply.ai system uses Google Cloud's Vertex AI to power its compliance scr
 2. Go to "APIs & Services" > "Library" in the left sidebar
 3. Search for **and enable** the following APIs:
    - **Vertex AI API** (this is the main one we need)
+   - **Cloud Storage** (this is needed for the web scraping agent to store screenshots)
    
-#### Step 3: Create a Service Account
+#### Step 3a: Create a Service Account
 
 1. Go to "IAM & Admin" > "Service Accounts" in the left sidebar
 2. Click "Create Service Account"
@@ -38,11 +42,19 @@ The recomply.ai system uses Google Cloud's Vertex AI to power its compliance scr
    - **Description**: `Service account for recomply.ai to access Vertex AI`
 4. Click "Create and Continue"
 
+#### Step 3b: Create a storage bucket for screenshots
+
+1. Go to "Cloud Storage" > "Buckets" in the left sidebar
+2. Click "Create" at the top
+3. Enter the bucket name such as `recomply-data`
+4. Click through until the end, until the bucket is created
+
 #### Step 4: Assign Permissions
 
 1. In the "Grant this service account access to project" section, add these roles:
    - **Vertex AI User** (allows making AI API calls)
    - **AI Platform Developer** (additional permissions for Vertex AI)
+   - **Storage Admin** (allows the web scraping agent to store screenshots and create access links)
 2. Click "Continue" and then "Done"
 
 #### Step 5: Create and Download the Service Account Key
@@ -77,6 +89,11 @@ Copy the entire base64 output (it will be a long string).
   to the base64 string you copied in the previous step:
 ```env
 GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64=<your-base64-encoded-key-here>
+GCP_STORAGE_SERVICE_ACCOUNT_CREDS_BASE64=<the same base64 string as above>
+GCP_PROJECT_ID=<GCP project name that you have created this key for (where the storage bucket is created)>
+GCP_STORAGE_BUCKET_NAME=<name of the storage bucket that you have created>
+OPENSANCTIONS_API_KEY=<provided by recomply.ai team>
+BRIGHT_DATA_CDP_WS_URL=<provided by recomply.ai team>
 ```
 
 #### Step 7b: Update the `docker-swarm.yaml` file (for Docker Swarm configuration)
@@ -90,6 +107,11 @@ so you need to update the `docker-swarm.yaml` file directly.
 x-common-environment: &common-environment
   ...
   GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64=<your-base64-encoded-key-here>
+  GCP_STORAGE_SERVICE_ACCOUNT_CREDS_BASE64=<the same base64 string as above>
+  GCP_PROJECT_ID=<GCP project name that you have created this key for (where the storage bucket is created)>
+  GCP_STORAGE_BUCKET_NAME=<name of the storage bucket that you have created>
+  OPENSANCTIONS_API_KEY=<provided by recomply.ai team>
+  BRIGHT_DATA_CDP_WS_URL=<provided by recomply.ai team>
 ```
 
 ## Running the system
@@ -97,18 +119,31 @@ x-common-environment: &common-environment
 recomply.ai stores their system docker images in Google Cloud's Artifact Registry. To pull these images, you need to first
 authenticate with Google Cloud Artifact Registry.
 
+### Prerequisites
 1. **Ensure the artifact-repository-key.json is copied**
    - The `artifact-repository-key.json` file is provided by recomply.ai team. It contains a GCP key required to
      pull our private docker container images. This key ensures secure access to the latest verified
      builds of our software.
    - Copy the `artifact-repository-key.json` file to the root directory of the project.
 
-2. **Authenticate with Google Cloud Artifact Registry**:
-   ```bash
-   cat artifact-repository-key.json | docker login -u _json_key --password-stdin https://us-central1-docker.pkg.dev
-   ```
+2. **Install Google Cloud SDK (gcloud)**
+   - Download and install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) for your platform
 
-3. **Start the platform**:
+### Authentication
+
+Authenticate with Google Cloud Artifact Registry using the service account:
+
+```bash
+# Authenticate with the service account
+gcloud auth activate-service-account --key-file=artifact-repository-key.json
+
+# Configure Docker to use gcloud credentials for the registry
+gcloud auth configure-docker us-central1-docker.pkg.dev
+```
+
+**For Docker Swarm**: Run these authentication commands on each swarm node before deploying the stack.
+
+### Starting the Platform
 
 For **Docker Compose**:
 ```bash
@@ -121,7 +156,7 @@ docker compose up --pull always -d
 
 For **Docker Swarm**:
 ```bash
-docker stack deploy -c docker-swarm.yaml recomply
+docker stack deploy -c docker-swarm.yaml --with-registry-auth recomply
 ```
 to stop, run:
 ```bash
