@@ -1,5 +1,5 @@
-x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:9c358dfc3d8174c67fa3a95d55bb2315f33b62c1
-x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:b7d4c8013396f4f4175295f0973cb7e13290e2e0
+x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:40aa8ba401d7e08c113c78a6605e1223c866665f
+x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:bdf667fa8b3f8ddfde0427b6fb6e6350f3021a40
 
 x-common-environment: &common-environment
   LOG_LEVEL: INFO
@@ -12,11 +12,56 @@ x-common-environment: &common-environment
   ADMIN_PASSWORD: secret123
   CLIENT_API_KEY: api-key
   BROWSER_USE_BROWSER_BINARY_PATH: /usr/bin/chromium
+  OPENSANCTIONS_BASE_URL: http://sanctions_app:8000
+  OPENSANCTIONS_API_KEY: dummy
 
 x-common-env-file: &common-env-file
   - .env
 
 services:
+  sanctions_index:
+    image: public.ecr.aws/opensearchproject/opensearch:2.19.3
+    expose:
+      - "9200"
+    environment:
+      - node.name=index
+      - cluster.name=opensanctions-index
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=aefgA1oy!hqgjkl
+      - plugins.security.disabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./.data/sanctions_data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  sanctions_app:
+    image: ghcr.io/opensanctions/yente:5.0.1
+    expose:
+      - "8000"
+    environment:
+      YENTE_INDEX_TYPE: "opensearch"
+      YENTE_INDEX_URL: http://sanctions_index:9200
+      YENTE_UPDATE_TOKEN: ""
+    depends_on:
+      sanctions_index:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
   postgres:
     image: postgres:16-alpine
     environment:
