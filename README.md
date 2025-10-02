@@ -9,6 +9,8 @@ This document outlines the deployment and operation of the recomply.ai complianc
 - Network access to Google Cloud's container registry (us-central1-docker.pkg.dev)
 - The `artifact-repository-key.json` file provided by recomply.ai team (necessary for pulling our private docker images)
 - GCP account for AI API access and screenshot storage for the web scraping agent
+- Ideally 2GB+ of RAM for the system to run smoothly
+- Sufficient disk space for sanctions data (recommend at least 10GB for OpenSanctions datasets)
 
 ## Setting up the GCP credentials for AI API access & storage
 
@@ -92,8 +94,8 @@ GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64=<your-base64-encoded-key-here>
 GCP_STORAGE_SERVICE_ACCOUNT_CREDS_BASE64=<the same base64 string as above>
 GCP_PROJECT_ID=<GCP project name that you have created this key for (where the storage bucket is created)>
 GCP_STORAGE_BUCKET_NAME=<name of the storage bucket that you have created>
-OPENSANCTIONS_API_KEY=<provided by recomply.ai team>
 BRIGHT_DATA_CDP_WS_URL=<provided by recomply.ai team>
+UK_COMPANIES_HOUSE_API_KEY=<provided by recomply.ai team>
 ```
 
 #### Step 7b: Update the `docker-swarm.yaml` file (for Docker Swarm configuration)
@@ -106,12 +108,12 @@ so you need to update the `docker-swarm.yaml` file directly.
 ```yaml
 x-common-environment: &common-environment
   ...
-  GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64=<your-base64-encoded-key-here>
-  GCP_STORAGE_SERVICE_ACCOUNT_CREDS_BASE64=<the same base64 string as above>
-  GCP_PROJECT_ID=<GCP project name that you have created this key for (where the storage bucket is created)>
-  GCP_STORAGE_BUCKET_NAME=<name of the storage bucket that you have created>
-  OPENSANCTIONS_API_KEY=<provided by recomply.ai team>
-  BRIGHT_DATA_CDP_WS_URL=<provided by recomply.ai team>
+  GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64: <your-base64-encoded-key-here>
+  GCP_STORAGE_SERVICE_ACCOUNT_CREDS_BASE64: <the same base64 string as above>
+  GCP_PROJECT_ID: <GCP project name that you have created this key for (where the storage bucket is created)>
+  GCP_STORAGE_BUCKET_NAME: <name of the storage bucket that you have created>
+  BRIGHT_DATA_CDP_WS_URL: <provided by recomply.ai team>
+  UK_COMPANIES_HOUSE_API_KEY: <provided by recomply.ai team>
 ```
 
 ## Running the system

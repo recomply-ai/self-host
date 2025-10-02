@@ -1,7 +1,7 @@
 version: '3.8'
 
-x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:9c358dfc3d8174c67fa3a95d55bb2315f33b62c1
-x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:b7d4c8013396f4f4175295f0973cb7e13290e2e0
+x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:40aa8ba401d7e08c113c78a6605e1223c866665f
+x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:bdf667fa8b3f8ddfde0427b6fb6e6350f3021a40
 
 x-common-environment: &common-environment
   PYTHONPATH: /app/src
@@ -14,16 +14,73 @@ x-common-environment: &common-environment
   BROWSER_USE_BROWSER_BINARY_PATH: /usr/bin/chromium
   LOG_LEVEL: INFO
   APP_ENV: dev
+  OPENSANCTIONS_BASE_URL: http://sanctions_app:8000
+  OPENSANCTIONS_API_KEY: dummy
 
   # Need to be populated manually
   GOOGLE_SERVICE_ACCOUNT_CREDS_BASE64: POPULATE_ME_FROM_GOOGLE_SERVICE_ACCOUNT_KEY
-  OPENSANCTIONS_API_KEY: POPULATE_ME
   GCP_PROJECT_ID: POPULATE_ME
   GCP_STORAGE_BUCKET_NAME: POPULATE_ME
   GCP_STORAGE_SERVICE_ACCOUNT_CREDS_BASE64: POPULATE_ME_FROM_GOOGLE_SERVICE_ACCOUNT_KEY
   BRIGHT_DATA_CDP_WS_URL: POPULATE_ME
+  UK_COMPANIES_HOUSE_API_KEY: POPULATE_ME_ASK_RECOMPLY_TEAM
 
 services:
+  sanctions_index:
+    image: public.ecr.aws/opensearchproject/opensearch:2.19.3
+    environment:
+      - node.name=index
+      - cluster.name=opensanctions-index
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=aefgA1oy!hqgjkl
+      - plugins.security.disabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - sanctions_data:/usr/share/opensearch/data
+    deploy:
+      replicas: 1
+      placement:
+        max_replicas_per_node: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - backend
+
+  sanctions_app:
+    image: ghcr.io/opensanctions/yente:5.0.1
+    environment:
+      YENTE_INDEX_TYPE: "opensearch"
+      YENTE_INDEX_URL: http://sanctions_index:9200
+      YENTE_UPDATE_TOKEN: ""
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - backend
+
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -241,6 +298,8 @@ networks:
     attachable: true
 
 volumes:
+  sanctions_data:
+    driver: local
   postgres_data:
     driver: local
   redis_data:
