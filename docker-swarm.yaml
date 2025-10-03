@@ -1,7 +1,7 @@
 version: '3.8'
 
-x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:40aa8ba401d7e08c113c78a6605e1223c866665f
-x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:bdf667fa8b3f8ddfde0427b6fb6e6350f3021a40
+x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:7172dd7cba074d543385d7db8f882d3b049dbd40
+x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:a359807503e66bbc21173b3cf7ff2edbee8f8e0f
 
 x-common-environment: &common-environment
   PYTHONPATH: /app/src
