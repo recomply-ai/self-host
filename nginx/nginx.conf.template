@@ -17,6 +17,9 @@ server {
     listen 80;
     server_name _;
     
+    # Allow uploads up to 100MB
+    client_max_body_size 100M;
+    
     # Redirect logs to Docker's stdout/stderr
     access_log /dev/stdout;
     error_log /dev/stderr;
