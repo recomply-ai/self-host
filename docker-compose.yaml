@@ -1,5 +1,5 @@
-x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:7172dd7cba074d543385d7db8f882d3b049dbd40
-x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:a359807503e66bbc21173b3cf7ff2edbee8f8e0f
+x-backend-image: &backend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-backend/backend:latest
+x-frontend-image: &frontend-image us-central1-docker.pkg.dev/propane-bebop-462910-g8/recomply-ai-frontend/frontend:latest
 
 x-common-environment: &common-environment
   LOG_LEVEL: INFO
